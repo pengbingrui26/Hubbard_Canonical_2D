@@ -99,9 +99,9 @@ def init_fn(model):
             expMF = _make_expMF(elements)
             expU_diag = _make_expU(spin, sigma, Utau)
 
-            psi = jnp.matmul(expMF, psi)
-            psi = jnp.multiply(expU_diag, psi.T).T
             #psi = jnp.matmul(expMF, psi)
+            psi = jnp.multiply(expU_diag, psi.T).T
+            psi = jnp.matmul(expMF, psi)
 
         return psi
 

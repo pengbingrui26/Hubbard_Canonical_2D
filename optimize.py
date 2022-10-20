@@ -407,7 +407,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
         params = optax.apply_updates(params, updates)
         return params, opt_state, loss, grad, sign_mean, key
 
-    opt_nstep = 1000
+    opt_nstep = 2000
 
     F_exact = make_free_energy_ED(beta, model.Lx, model.Ly, model.N, model.t, model.U)
 
@@ -425,8 +425,8 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
         #print(grad)
         #print('params:')
         #print(params)
-        print('taus:')
-        print(params[psi0_set.shape[0]:])  
+        #print('taus:')
+        #print(params[psi0_set.shape[0]:])  
         print('loss, exact:', loss, F_exact)
         #print('loss:', loss)
         print('sign_mean:', sign_mean)
@@ -436,9 +436,9 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
         #    break
         print('\n')
 
-    datas = {"U": model.U, "beta": beta, "F_exact": F_exact, \
-             "learning_rate": learning_rate, "opt_nstep":opt_nstep, \
-            "loss": loss_all, "sign_mean": sign_mean_all, "params_final": params}
+    datas = {"U": model.U, "beta": beta, "F_exact": F_exact, "nlayer": Nlayer, \
+             "learning_rate": learning_rate, "opt_nstep": opt_nstep, "npsi": npsi0, \
+             "loss": loss_all, "sign_mean": sign_mean_all, "params_final": params}
 
     import pickle as pk
     fp = open('./optimize_F_Lsite=6', 'wb')
@@ -563,7 +563,7 @@ def test_optimize_F():
     Lsite = Lx * Ly
     N = int(Lsite/2)
     t = 1.
-    U = 2.
+    U = 1.
     model = Hubbard_2d_free(Lx, Ly, N, t, U)
 
     #print(model.get_Hfree_half())
@@ -584,9 +584,9 @@ def test_optimize_F():
     nthermal = 50
     nsample = 5
     ninterval = 1
-    batch = 1000
+    batch = 500
 
-    nlayer = 2
+    nlayer = 1
     beta = 1.
 
     optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, nlayer)
