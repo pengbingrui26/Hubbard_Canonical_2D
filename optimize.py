@@ -385,8 +385,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
     npsi0 = psi0_set.shape[0] * psi0_set.shape[1]
     qq = jnp.array([0.1] * npsi0)    
 
-    nelement = int(model.Lsite ** 2)
-    taus = jnp.array([0.05] * (nelement+1) * Nlayer) 
+    taus = jnp.array([0.05] * 2 * Nlayer) 
     params = jnp.hstack((qq, taus))
 
     key_init = jax.random.PRNGKey(21)
@@ -407,7 +406,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
         params = optax.apply_updates(params, updates)
         return params, opt_state, loss, grad, sign_mean, key
 
-    opt_nstep = 1000
+    opt_nstep = 2000
 
     F_exact = make_free_energy_ED(beta, model.Lx, model.Ly, model.N, model.t, model.U)
 
@@ -438,7 +437,8 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
 
     datas = {"U": model.U, "beta": beta, "F_exact": F_exact, \
              "learning_rate": learning_rate, "opt_nstep":opt_nstep, \
-            "loss": loss_all, "sign_mean": sign_mean_all, "params_final": params}
+            "loss": loss_all, "sign_mean": sign_mean_all, \
+            "nlayer": Nlayer, "params_final": params, "npsi": npsi0}
 
     import pickle as pk
     fp = open('./optimize_F.txt', 'wb')
@@ -582,9 +582,9 @@ def test_optimize_F():
     print('psi0_set.shape:', psi0_set.shape)
 
     nthermal = 50
-    nsample = 3
+    nsample = 5
     ninterval = 1
-    batch = 1000
+    batch = 500
 
     nlayer = 1
     beta = 1.

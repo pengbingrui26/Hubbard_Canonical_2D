@@ -136,8 +136,6 @@ class Hubbard_2d_free(object):
                 psi0_full_set.append(psi0_full)
         return psi0_full_set
 
-
-# =========================================================
     def get_basis(self):
         from itertools import combinations
         up = combinations(range(self.Lsite), self.N)

@@ -12,33 +12,7 @@ I = complex(0., 1.)
 # ================================================================================================
 
 def init_fn(model):
-    #Tmatr = model.get_Hfree_half()
-
-    def _make_expMF(elements):
-        # elements is a 1D array of shape (model.Lsite * model.Lsite, )
-        """
-        diags = elements[:model.Lsite]
-        off_diags = elements[model.Lsite:]
-        MF = jnp.zeros((model.Lsite, model.Lsite))
-        ntotal = 0
-        for i in range(model.Lsite-1):
-            MF = MF.at[i, i+1:].set(off_diags[ntotal: ntotal + model.Lsite - i - 1])
-            ntotal += (model.Lsite - i - 1)
-        MF = MF + MF.T
-        for i in range(model.Lsite):
-            MF = MF.at[i, i].set(diags[i])
-        """
-        elements_matr = jnp.reshape(elements, (model.Lsite, model.Lsite))
-        MF = elements_matr + elements_matr.T
-
-        expMF = jax.scipy.linalg.expm(-I * MF)
-
-        #expMF_conjugate = jnp.conjugate(expMF.T)
-        #print('check unitary:')
-        #print(jnp.dot(expMF_conjugate, expMF))
-
-        return expMF
-
+    Tmatr = model.get_Hfree_half()
 
     # act on spin SD
     def _make_expU(spin, sigma, tau):
@@ -59,13 +33,8 @@ def init_fn(model):
     #@partial(jax.jit)
     def _evolve(psi0, spin, sigmas, params):
         # sigmas has the shape (nlayer, model.L)
-        # params = [nelement, Utaus ] * nlayer
-        #nelement = int(model.Lsite * (model.Lsite + 1)/2)
-        nelement = int(model.Lsite ** 2)
-        nparam_per_layer = nelement + 1
-        #elements = params[:int(model.Lsite * (model.Lsite + 1)/2)]
-        #taus = params[int(model.Lsite * (model.Lsite + 1)/2):]
-        #lenth = taus.shape[-1]
+        # params = [expT_tau, expU_tau] * nlayer
+        nparam_per_layer = 2
         nlayer = int(params.shape[0]/nparam_per_layer)
         psi = psi0
         #print('psi.shape:', psi.shape)
@@ -90,18 +59,16 @@ def init_fn(model):
         """
 
         for ilayer in range(nlayer):
-            elements = params[ilayer*nparam_per_layer: ilayer*nparam_per_layer + nelement]
-            Utau = params[ilayer*nparam_per_layer + nelement]
+            expT_tau = params[ilayer*nparam_per_layer]
+            expU_tau = params[ilayer*nparam_per_layer + 1]
 
             sigma = sigmas[ilayer]
             #expT = jax.lax.pow(expT0, tau2.astype(complex))
-            #expT = jax.scipy.linalg.expm(-I * Tmatr * tau2)
-            expMF = _make_expMF(elements)
-            expU_diag = _make_expU(spin, sigma, Utau)
+            expT = jax.scipy.linalg.expm(-I * Tmatr * expT_tau)
+            expU_diag = _make_expU(spin, sigma, expU_tau)
 
-            psi = jnp.matmul(expMF, psi)
             psi = jnp.multiply(expU_diag, psi.T).T
-            #psi = jnp.matmul(expMF, psi)
+            psi = jnp.matmul(expT, psi)
 
         return psi
 

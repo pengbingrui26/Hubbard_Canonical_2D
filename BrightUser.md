@@ -60,7 +60,7 @@ bash: julia: command not found...
 # Slurm 启动交互进程
 有的时候我们想调试一段代码，那么可能需要交互式地使用集群上的资源。srun命令可以分配一些内存允许我们登陆到节点之上。比如现在我想用TitanV 1个小时来调试程序：
 ```bash
-srun -p titanv --pty --gres=gpu:1 -t 0-02:00 /bin/bash
+srun -p titanv --pty --gres=gpu:8 -t 0-03:00 /bin/bash
 ```
 就可以了
 
