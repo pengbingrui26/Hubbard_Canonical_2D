@@ -441,7 +441,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
             "loss": loss_all, "sign_mean": sign_mean_all, "params_final": params}
 
     import pickle as pk
-    fp = open('./optimize_F_Lsite=6', 'wb')
+    fp = open('./optimize_F.txt', 'wb')
     pk.dump(datas, fp)
     fp.close()
 
@@ -563,7 +563,7 @@ def test_optimize_F():
     Lsite = Lx * Ly
     N = int(Lsite/2)
     t = 1.
-    U = 2.
+    U = 1.
     model = Hubbard_2d_free(Lx, Ly, N, t, U)
 
     #print(model.get_Hfree_half())
@@ -582,11 +582,11 @@ def test_optimize_F():
     print('psi0_set.shape:', psi0_set.shape)
 
     nthermal = 50
-    nsample = 5
+    nsample = 3
     ninterval = 1
     batch = 1000
 
-    nlayer = 2
+    nlayer = 1
     beta = 1.
 
     optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, nlayer)
