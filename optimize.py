@@ -563,7 +563,7 @@ def test_optimize_F():
     Lsite = Lx * Ly
     N = int(Lsite/2)
     t = 1.
-    U = 1.
+    U = 2.
     model = Hubbard_2d_free(Lx, Ly, N, t, U)
 
     #print(model.get_Hfree_half())
@@ -584,9 +584,9 @@ def test_optimize_F():
     nthermal = 50
     nsample = 5
     ninterval = 1
-    batch = 500
+    batch = 1000
 
-    nlayer = 1
+    nlayer = 2
     beta = 1.
 
     optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, nlayer)
