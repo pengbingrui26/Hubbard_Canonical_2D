@@ -441,7 +441,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
              "loss": loss_all, "sign_mean": sign_mean_all, "params_final": params}
 
     import pickle as pk
-    fp = open('./optimize_F_Lsite=6', 'wb')
+    fp = open('./optimize_F.txt', 'wb')
     pk.dump(datas, fp)
     fp.close()
 

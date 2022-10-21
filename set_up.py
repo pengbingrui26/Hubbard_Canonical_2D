@@ -60,35 +60,34 @@ def init_fn(model):
     def _evolve(psi0, spin, sigmas, params):
         # sigmas has the shape (nlayer, model.L)
         # params = [nelement, Utaus ] * nlayer
-        #nelement = int(model.Lsite * (model.Lsite + 1)/2)
+        # nelement = int(model.Lsite * (model.Lsite + 1)/2)
         nelement = int(model.Lsite ** 2)
         nparam_per_layer = nelement + 1
-        #elements = params[:int(model.Lsite * (model.Lsite + 1)/2)]
-        #taus = params[int(model.Lsite * (model.Lsite + 1)/2):]
-        #lenth = taus.shape[-1]
         nlayer = int(params.shape[0]/nparam_per_layer)
         psi = psi0
-        #print('psi.shape:', psi.shape)
 
-        """
+        params_split = jnp.split(params, nlayer)
+        elements_split = [ param[:nelement] for param in params_split ]
+        Utau_split = [ param[-1] for param in params_split ]
+        elements_split = jnp.array(elements_split)
+        Utau_split = jnp.array(Utau_split)
+
+        @jax.jit
         def body_fun(ilayer, psi):
-            elements = params[ilayer*nparam_per_layer: ilayer*nparam_per_layer + nelement]
-            Utau = params[ilayer*nparam_per_layer + nelement]
+            #elements = params[ilayer*nparam_per_layer: ilayer*nparam_per_layer + nelement]
+            #Utau = params[ilayer*nparam_per_layer + nelement]
+            elements = elements_split[ilayer]
+            Utau = Utau_split[ilayer]
             sigma = sigmas[ilayer]
 
-            #expT = jax.lax.pow(expT0, tau2.astype(complex))
-            #expT = jax.scipy.linalg.expm(-I * Tmatr * tau2)
             expMF = _make_expMF(elements)
             expU_diag = _make_expU(spin, sigma, Utau)
-
-            psi = jnp.multiply(expU_diag, psi.T).T
-            psi = jnp.dot(expMF, psi)
 
             return jnp.dot(expMF, jnp.multiply(expU_diag, psi.T).T)
 
         psi = jax.lax.fori_loop(0, nlayer, body_fun, psi.astype('complex'))
-        """
 
+        """
         for ilayer in range(nlayer):
             elements = params[ilayer*nparam_per_layer: ilayer*nparam_per_layer + nelement]
             Utau = params[ilayer*nparam_per_layer + nelement]
@@ -102,11 +101,12 @@ def init_fn(model):
             #psi = jnp.matmul(expMF, psi)
             psi = jnp.multiply(expU_diag, psi.T).T
             psi = jnp.matmul(expMF, psi)
+        """
 
         return psi
 
+
     # act on full SD
-    #@partial(jax.jit)
     def make_W(psi0, sigmas_long, params):
         # sigmas_long has the shape of (nlayer, model.Lsite*2) 
         #print('psi0.shape:', psi0.shape)
@@ -119,9 +119,6 @@ def init_fn(model):
 
         psi_up_R = _evolve(psi0_up, 1, sigmasR, params)
         psi_down_R = _evolve(psi0_down, -1, sigmasR, params)
-
-        #psi_L = jnp.vstack((psi_up_L, psi_down_L))
-        #psi_R = jnp.vstack((psi_up_R, psi_down_R))
 
         W_up = jnp.dot(jnp.conjugate(psi_up_L.T), psi_up_R)
         W_down = jnp.dot(jnp.conjugate(psi_down_L.T), psi_down_R)
@@ -199,7 +196,8 @@ def init_fn(model):
 
         U_loc = 0. + 1j * 0.
 
-        def body_fun(k, uloc):
+        @jax.jit
+        def _body_fun(k, uloc):
             psiL_up_k = jnp.conjugate(psiL_up)[k,:]
             psiR_up_k = psiR_up[k,:]
             A_up = jnp.outer(psiL_up_k, psiR_up_k)
@@ -212,6 +210,9 @@ def init_fn(model):
 
             return uloc + k_spin_up * k_spin_down
 
+        U_loc = jax.lax.fori_loop(0, model.Lsite, _body_fun, U_loc)
+
+        """
         for k in range(model.Lsite):
             psiL_up_k = jnp.conjugate(psiL_up)[k,:]
             psiR_up_k = psiR_up[k,:]
@@ -224,8 +225,7 @@ def init_fn(model):
             k_spin_down = jnp.trace(jnp.dot(Sdown_inv, A_down))
 
             U_loc += k_spin_up * k_spin_down
-
-        #U_loc = jax.lax.fori_loop(0, model.Lsite, body_fun, U_loc)
+        """
 
         Eloc = jnp.linalg.det(S) * (T_loc + model.U * U_loc)
         return Eloc.real, Eloc.imag
