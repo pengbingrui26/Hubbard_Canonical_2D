@@ -406,7 +406,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
         params = optax.apply_updates(params, updates)
         return params, opt_state, loss, grad, sign_mean, key
 
-    opt_nstep = 2000
+    opt_nstep = 1000
 
     F_exact = make_free_energy_ED(beta, model.Lx, model.Ly, model.N, model.t, model.U)
 
@@ -563,7 +563,7 @@ def test_optimize_F():
     Lsite = Lx * Ly
     N = int(Lsite/2)
     t = 1.
-    U = 1.
+    U = 2.
     model = Hubbard_2d_free(Lx, Ly, N, t, U)
 
     #print(model.get_Hfree_half())
@@ -584,9 +584,9 @@ def test_optimize_F():
     nthermal = 50
     nsample = 5
     ninterval = 1
-    batch = 500
+    batch = 1000
 
-    nlayer = 1
+    nlayer = 2
     beta = 1.
 
     optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, nlayer)
