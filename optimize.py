@@ -407,7 +407,7 @@ def optimize_F(beta, model, psi0_set, batch, nthermal, nsample, ninterval, Nlaye
         params = optax.apply_updates(params, updates)
         return params, opt_state, loss, grad, sign_mean, key
 
-    opt_nstep = 2000
+    opt_nstep = 1000
 
     F_exact = make_free_energy_ED(beta, model.Lx, model.Ly, model.N, model.t, model.U)
 
